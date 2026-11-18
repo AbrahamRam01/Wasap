@@ -127,7 +127,7 @@ class ClienteChat(tk.Tk):
         except OSError as e:
             messagebox.showerror("No se pudo conectar",
                                  f"No se pudo conectar a {self.host}:{self.port}\n\n{e}\n\n"
-                                 "¿Está corriendo servidor.py?")
+                                 "¿Está corriendo server.py en el servidor?")
             return
 
         self.nombre = nombre
