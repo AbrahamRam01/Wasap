@@ -44,7 +44,7 @@ def getName(connection) -> str:
     return ""
 
 def broadcast(message, connection):
-    for client in list_of_clients:
+    for client in list(list_of_clients):  # copia: remove() puede modificar la lista
         if client.conn != connection:
             try:
                 client.conn.send(bytes(message, 'utf-8'))
@@ -53,8 +53,11 @@ def broadcast(message, connection):
                 remove(client)
 
 def remove(connection):
-    if connection in list_of_clients:
-        list_of_clients.remove(connection)
+    # Acepta el objeto Cliente o su socket, porque la lista guarda objetos Cliente
+    for client in list(list_of_clients):
+        if client is connection or client.conn == connection:
+            list_of_clients.remove(client)
+            break
 
 if __name__ == "__main__":
     #host = socket.gethostname()  # Esta función nos da el nombre de la máquina

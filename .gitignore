@@ -1,0 +1,11 @@
+# Llaves de acceso: NUNCA subirlas al repositorio
+*.pem
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# macOS
+.DS_Store
