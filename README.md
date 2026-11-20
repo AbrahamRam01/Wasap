@@ -1,6 +1,6 @@
 # Wasap
 
-Práctica 1 de Sistemas Distribuidos. Es un chat tipo WhatsApp hecho con sockets en Python.
+Práctica 1 de Sistemas Distribuidos.
 
 El servidor ya está corriendo en AWS (`3.149.102.2:3011`) y guarda todo en la base de datos, así que solo hay que ejecutar el cliente.
 
@@ -33,6 +33,4 @@ En Windows es `pip install pillow` y `python cliente.py`.
 - Al entrar aparece el chat global.
 - En **Activos** se ve quién está conectado y se puede abrir un chat individual.
 - Con el botón **+** se pueden crear grupos y canales.
-- En **Canales** se pueden buscar y seguir canales (solo el que lo creó puede publicar).
-
-Para probarlo se pueden abrir dos clientes con nombres diferentes.
+- En **Canales** se pueden buscar y seguir canales.
