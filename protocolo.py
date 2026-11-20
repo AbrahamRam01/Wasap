@@ -1,61 +1,67 @@
 """
-Protocolo de texto que usa el cliente para hablar con servidor.py.
+Protocolo compartido entre server.py y cliente.py.
 
-El servidor solo entiende tres tipos de mensaje:
-  <name>TEXTO      -> guarda TEXTO como el nombre del cliente
-  <command>TEXTO   -> lo reenvía tal cual a los demás clientes
-  cualquier otro   -> lo reenvía como "<nombre> mensaje"
+Cada mensaje es un objeto JSON en UNA línea, terminado en "\\n" (JSON Lines).
+TCP es un flujo de bytes: un recv() puede traer medio mensaje o varios juntos,
+así que LectorLineas acumula bytes y solo entrega líneas completas.
 
-Para mandar el avatar sin modificar el servidor, el cliente guarda
-su nombre como "Nombre|07" (nombre + número de avatar). Así, cada
-mensaje que reenvía el servidor llega como "<Nombre|07> hola".
+Cliente -> servidor (campo "accion"):
+    login            {nombre, imagen}
+    abrir_chat       {idChat}
+    enviar           {idChat, texto}
+    crear_privado    {idUsuario}
+    crear_grupo      {nombre, miembros: [idUsuario, ...]}
+    crear_canal      {nombre}
+    explorar_canales {}
+    seguir_canal     {idChat}
+    salir_chat       {idChat}
+    eliminar_canal   {idChat}
+
+Servidor -> cliente (campo "tipo"):
+    bienvenida       {usuario, chats, usuarios, idGlobal, horaServidor}
+    error_login      {mensaje}
+    usuarios         {lista}             usuarios conectados
+    chat             {chat, abrir}       chat nuevo o actualizado
+    chat_eliminado   {idChat}
+    historial        {idChat, mensajes}
+    mensaje          {idChat, mensaje}
+    canales          {lista}             resultado de explorar_canales
+    error            {mensaje}
 """
 
-import re
+import json
 
-SEPARADOR = "|"
-AVATAR_DEFAULT = 0  # 0 = sin avatar (por ejemplo, alguien conectado con nc)
-
-_RE_MENSAJE = re.compile(r"^<(.*?)> (.*)$", re.DOTALL)
+MAX_LINEA = 2_000_000  # bytes; protege contra clientes que nunca mandan "\n"
 
 
-def armar_nombre(nombre: str, avatar: int) -> str:
-    """Mensaje para registrar nombre y avatar en el servidor."""
-    nombre = nombre.replace(SEPARADOR, "").replace("<", "").replace(">", "").strip()
-    return f"<name>{nombre}{SEPARADOR}{avatar:02d}"
+def codificar(obj) -> bytes:
+    """dict -> bytes listos para sendall()."""
+    return (json.dumps(obj, ensure_ascii=False, default=str) + "\n").encode("utf-8")
 
 
-def armar_aviso_entrada(nombre: str, avatar: int) -> str:
-    """Comando para avisar a los demás que alguien entró al chat."""
-    return f"<command>join{SEPARADOR}{nombre}{SEPARADOR}{avatar:02d}"
+class LineaDemasiadoLarga(Exception):
+    pass
 
 
-def separar_nombre(etiqueta: str):
-    """'Abraham|07' -> ('Abraham', 7). Si no trae avatar -> (etiqueta, 0)."""
-    if SEPARADOR in etiqueta:
-        nombre, _, num = etiqueta.rpartition(SEPARADOR)
-        if num.isdigit():
-            return nombre, int(num)
-    return etiqueta, AVATAR_DEFAULT
+class LectorLineas:
+    """Junta los bytes recibidos y devuelve los mensajes JSON completos."""
 
+    def __init__(self):
+        self._buffer = b""
 
-def interpretar(linea: str) -> dict:
-    """
-    Convierte una línea recibida del servidor en un diccionario:
-      {"tipo": "mensaje", "nombre", "avatar", "texto"}
-      {"tipo": "entrada", "nombre", "avatar"}
-      {"tipo": "sistema", "texto"}
-    """
-    if linea.startswith("<command>"):
-        partes = linea[len("<command>"):].split(SEPARADOR)
-        if len(partes) == 3 and partes[0] == "join" and partes[2].isdigit():
-            return {"tipo": "entrada", "nombre": partes[1], "avatar": int(partes[2])}
-        return {"tipo": "sistema", "texto": linea[len("<command>"):]}
-
-    m = _RE_MENSAJE.match(linea)
-    if m:
-        nombre, avatar = separar_nombre(m.group(1))
-        return {"tipo": "mensaje", "nombre": nombre or "Anónimo",
-                "avatar": avatar, "texto": m.group(2)}
-
-    return {"tipo": "sistema", "texto": linea}
+    def alimentar(self, datos: bytes) -> list:
+        self._buffer += datos
+        mensajes = []
+        while b"\n" in self._buffer:
+            linea, self._buffer = self._buffer.split(b"\n", 1)
+            if not linea.strip():
+                continue
+            try:
+                obj = json.loads(linea.decode("utf-8"))
+            except (ValueError, UnicodeDecodeError):
+                continue  # línea corrupta: se ignora
+            if isinstance(obj, dict):
+                mensajes.append(obj)
+        if len(self._buffer) > MAX_LINEA:
+            raise LineaDemasiadoLarga()
+        return mensajes

@@ -1,11 +1,15 @@
-# Llaves de acceso: NUNCA subirlas al repositorio
+# Llaves de acceso y contraseñas: NUNCA subirlas al repositorio
 *.pem
+config_local.py
 
 # Python
 __pycache__/
 *.pyc
 .venv/
 venv/
+
+# Logs del servidor
+*.log
 
 # macOS
 .DS_Store
