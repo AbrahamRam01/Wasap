@@ -21,7 +21,7 @@ except ImportError:
     sys.exit(1)
 
 # ---------------- Configuración ----------------
-SERVIDOR_POR_DEFECTO = "18.190.171.148:3011"
+SERVIDOR_POR_DEFECTO = "3.149.102.2:3011"
 PUERTO_POR_DEFECTO = 3011
 CARPETA_AVATARES = Path(__file__).resolve().parent / "avatares"
 NUM_AVATARES = 20
