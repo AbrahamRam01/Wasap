@@ -1,24 +1,38 @@
 # Wasap
 
-Práctica 1 de Sistemas Distribuidos. 
+Práctica 1 de Sistemas Distribuidos. Es un chat tipo WhatsApp hecho con sockets en Python.
 
-# Ejecución
+El servidor ya está corriendo en AWS (`3.149.102.2:3011`) y guarda todo en la base de datos, así que solo hay que ejecutar el cliente.
 
-Instalar lo necesario:
+## Cómo ejecutarlo
 
-```bash
-pip3 install pymssql pillow
-```
-
-Crear un archivo `config_local.py` con el usuario de la base que utilizara:
-
-```python
-DB_USER = ""
-DB_PASSWORD = ""
-```
-
-Ejecutar el cliente dentro de la carpeta donde esta el archivo "cliente.py":
+1. Descargar o clonar el repositorio:
 
 ```bash
-python3 cliente.py 127.0.0.1 3011
+git clone https://github.com/AbrahamRam01/Wasap.git
+cd Wasap
 ```
+
+2. Instalar Pillow (para las imágenes):
+
+```bash
+pip3 install pillow
+```
+
+3. Ejecutar el cliente:
+
+```bash
+python3 cliente.py
+```
+
+En Windows es `pip install pillow` y `python cliente.py`.
+
+## Uso
+
+- Escribir un nombre y elegir un avatar.
+- Al entrar aparece el chat global.
+- En **Activos** se ve quién está conectado y se puede abrir un chat individual.
+- Con el botón **+** se pueden crear grupos y canales.
+- En **Canales** se pueden buscar y seguir canales (solo el que lo creó puede publicar).
+
+Para probarlo se pueden abrir dos clientes con nombres diferentes.
